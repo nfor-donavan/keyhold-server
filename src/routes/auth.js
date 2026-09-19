@@ -8,8 +8,15 @@ const requireAuth = require("../middleware/auth");
 const router = express.Router();
 
 function issueToken(user) {
+  // user.organization may be a plain ObjectId (register/join) or a populated
+  // Organization document (login) — handle both so the token always gets
+  // the actual hex id, never a stringified object.
+  const orgId = user.organization && user.organization._id
+    ? user.organization._id.toString()
+    : user.organization.toString();
+
   return jwt.sign(
-    { userId: user._id.toString(), organizationId: user.organization.toString(), role: user.role },
+    { userId: user._id.toString(), organizationId: orgId, role: user.role },
     process.env.JWT_SECRET,
     { expiresIn: "30d" }
   );
